@@ -1,7 +1,7 @@
 // Codex: the user's own, installed and signed in by them. A run is a `codex exec` in the background; its thread is kept
 // on disk, so a retry or an answer can go on in it, and the link opens it in the app.
 import { execFileSync } from "node:child_process";
-import { findProgram, tail, type Adapter } from "../../worker/agents.ts";
+import { findProgram, launchProgram, tail, type Adapter } from "../../worker/agents.ts";
 
 const SANDBOX = { read: "read-only", edit: "workspace-write", full: "danger-full-access" };
 const IN_THE_APP = [
@@ -11,7 +11,7 @@ const IN_THE_APP = [
 
 export default {
   command: (turn) => [
-    findProgram("codex", () => IN_THE_APP),
+    ...launchProgram(turn, "codex", () => IN_THE_APP),
     "exec",
     ...(turn.resume ? ["resume"] : []),
     "--json",

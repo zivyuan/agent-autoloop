@@ -24,7 +24,7 @@ import { HubError, type Hub } from "../protocol/client.ts";
 import { HOME } from "../host/home.ts";
 import type { Job } from "../protocol/job.ts";
 import { addUsage, type Notice, type Result } from "../protocol/validate.ts";
-import { adapterFor, type Adapter, type Reading, type Turn, type Usage } from "./agents.ts";
+import { adapterFor, loginShell, type Adapter, type Reading, type Turn, type Usage } from "./agents.ts";
 import { promptFor, readMessage, repairPrompt, resultFrom } from "./contract.ts";
 
 const RUNS = path.join(HOME, "worker", "runs");
@@ -211,7 +211,7 @@ export function createWorker({
       ":",
     ].join("\n");
     // The login shell gives it the PATH and sign-in its owner has in a terminal; launchd and systemd give neither.
-    const login = [process.env.SHELL ?? "/bin/sh", "-lc", 'exec "$0" "$@"'];
+    const login = [loginShell(), "-lc", 'exec "$0" "$@"'];
     const child = spawn("/bin/sh", ["-c", script, marker(entry), out, err, exit, ...login, ...argv], {
       cwd,
       env: agentEnvironment(entry),

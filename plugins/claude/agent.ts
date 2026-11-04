@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
-import { findProgram, tail, type Adapter } from "../../worker/agents.ts";
+import { findProgram, launchProgram, tail, type Adapter } from "../../worker/agents.ts";
 
 const PERMISSIONS = { read: "plan", edit: "acceptEdits", full: "bypassPermissions" };
 
@@ -20,7 +20,7 @@ function inTheApp() {
 
 export default {
   command: (turn) => [
-    findProgram("claude", inTheApp),
+    ...launchProgram(turn, "claude", inTheApp),
     "-p",
     turn.prompt,
     ...(turn.resume ? ["--resume", turn.resume] : ["--session-id", turn.session]),

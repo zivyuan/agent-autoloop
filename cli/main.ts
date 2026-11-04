@@ -143,7 +143,14 @@ async function agentsToUse(named: Flags, worker: string) {
     try {
       // An adapter finds its program to build the command line, and throws if it's not there.
       adapter.command(emptyTurn);
-      agents[name] = { name: name === "claude" ? "Claude Code" : "Codex", worker, use: name };
+      // An override from the environment works now but not later, when the service runs without it; rules remember it.
+      const override = (process.env[`AGENT_AUTOLOOP_${name.toUpperCase()}`] ?? "").trim().split(/\s+/).filter(Boolean);
+      agents[name] = {
+        name: name === "claude" ? "Claude Code" : "Codex",
+        worker,
+        use: name,
+        ...(override.length ? { command: override } : {}),
+      };
     } catch {}
   }
   return agents;
@@ -162,7 +169,8 @@ async function init(args: string[]) {
   if (!Object.keys(agents).length) {
     return fail(
       "这台电脑上没找到 Claude Code 或 Codex。先装好并登录，" +
-        "或者用 --command 指定别的命令行 Agent，比如 --command 'hermes chat -q {prompt}'",
+        "或者用 --command 指定别的命令行 Agent，比如 --command 'hermes chat -q {prompt}'，" +
+        "或者用 AGENT_AUTOLOOP_CLAUDE / AGENT_AUTOLOOP_CODEX 指定自己的启动命令（shell 函数封装写裸名即可）",
     );
   }
   const port = text(named.port) ?? "3350";

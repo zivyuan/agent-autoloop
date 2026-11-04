@@ -58,6 +58,8 @@ description: 配置 Agent 自动化中台：加规则、接新的事件插件、
 
 `access` 默认 `edit`，专用插件翻译成对应 CLI 的权限；`command` 只传参数，不替任意程序限制权限，按该 CLI 文档配置。要完整权限、不审批的话写 `full`，先和用户说清楚。
 
+Claude Code 和 Codex 默认自动找程序。用户自己封装过启动命令的，在该 Agent 上写 `command` 覆盖：值是路径就直接执行，适合 PATH 上的封装脚本；值是裸命令名（如 `["claude"]`）就经过交互 shell 启动，能调到 `.zshrc` 里的 shell 函数和 alias。`init` 前设 `AGENT_AUTOLOOP_CLAUDE` / `AGENT_AUTOLOOP_CODEX` 同样生效，并会写进初始规则。
+
 第三方仓库根目录放 `agent.ts`、`channel.ts` 或 `source.ts`，用 `agent-autoloop add <git 地址>` 安装到 `~/.agent-autoloop/plugins/<仓库名>`。同名本机插件优先于内置插件，不自动更新。插件是可信代码，先读再装。
 
 ACP 用 `use: "acp"` 和 `command: ["ACP 服务程序"]`，支持 v1 的会话新建、恢复、文字与一次性权限请求；先在该 Agent 自己的 CLI 登录。普通命令接法与实测支持范围见 README。

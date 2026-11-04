@@ -4,6 +4,7 @@
 // rules.json.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { userInfo } from "node:os";
 import path from "node:path";
 import { loadPlugin } from "../host/plugins.ts";
 import type { Usage } from "../protocol/validate.ts";
@@ -47,10 +48,13 @@ export async function adapterFor(use: string): Promise<Adapter> {
 
 const found = new Map<string, string | null>();
 
+/** The owner's shell. A service runs without SHELL in its environment, so fall back to the password file. */
+export const loginShell = () => process.env.SHELL ?? userInfo().shell ?? "/bin/sh";
+
 /** Where a program is: on the login shell's PATH (launchd and systemd start with a bare one), or in one of these. */
 export function findProgram(name: string, elsewhere: () => string[] = () => []) {
   if (!found.has(name)) {
-    const shell = process.env.SHELL ?? "/bin/sh";
+    const shell = loginShell();
     let onPath: string | null = null;
     try {
       const printed = execFileSync(shell, ["-lc", `command -v ${name}`], {
@@ -65,6 +69,20 @@ export function findProgram(name: string, elsewhere: () => string[] = () => []) 
   const program = found.get(name);
   if (!program) throw new Error(`找不到 ${name}：先装好并登录`);
   return program;
+}
+
+/** How to launch a program: the agent's own command line if rules.json or AGENT_AUTOLOOP_<NAME> carries one, otherwise
+ * wherever it's installed. A bare first word may be a shell function or alias, which only the rc of an interactive
+ * shell defines, so it runs through one; the words after the -c string become its "$0" and "$@", which the command line
+ * passes on to the adapter's arguments that follow. */
+export function launchProgram(turn: Pick<Turn, "command">, name: string, elsewhere: () => string[] = () => []) {
+  const override = turn.command?.length
+    ? turn.command
+    : (process.env[`AGENT_AUTOLOOP_${name.toUpperCase()}`] ?? "").trim().split(/\s+/).filter(Boolean);
+  if (override.length) {
+    return override[0].includes("/") ? override : [loginShell(), "-ic", `${override.join(" ")} "$0" "$@"`];
+  }
+  return [findProgram(name, elsewhere)];
 }
 
 /** The end of some output, for saying why something failed. */

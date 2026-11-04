@@ -148,7 +148,7 @@ Built-in plugins ship with the program and are enabled through configuration. Us
 
 **What has been tested:** Claude Code, Codex, and ACP (with the official Codex ACP adapter) have run multi-turn Q&A and session resumption across processes. Feishu has run real delivery, button callbacks, and card updates. The four webhook templates have only been checked against local mock servers. These text channels answer through a link, so `hub.publicUrl` must be reachable from your phone or computer.
 
-**Other CLI agents connect in one line.** Set `use: "command"` and pass a command array; `{prompt}` is a single argument, never evaluated as shell code. These commands come from each tool's official docs, and we have not run each of them yet:
+**Other CLI agents connect in one line.** Set `use: "command"` and pass a command array; `{prompt}` is a single argument, never evaluated as shell code. If you wrap Claude Code / Codex in your own launcher (a shell function, alias, or script), you don't need a new adapter either: set `command` on the agent to override its launcher — a bare name starts through an interactive shell, so shell functions work. These commands come from each tool's official docs, and we have not run each of them yet:
 
 | Agent | Command |
 |---|---|
