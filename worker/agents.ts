@@ -4,6 +4,7 @@
 // rules.json.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { userInfo } from "node:os";
 import path from "node:path";
 import { loadPlugin } from "../host/plugins.ts";
 import type { Usage } from "../protocol/validate.ts";
@@ -47,10 +48,13 @@ export async function adapterFor(use: string): Promise<Adapter> {
 
 const found = new Map<string, string | null>();
 
+/** The owner's shell. A service can run without SHELL in its environment, so fall back to the password file. */
+export const loginShell = () => process.env.SHELL ?? userInfo().shell ?? "/bin/sh";
+
 /** Where a program is: on the login shell's PATH (launchd and systemd start with a bare one), or in one of these. */
 export function findProgram(name: string, elsewhere: () => string[] = () => []) {
   if (!found.has(name)) {
-    const shell = process.env.SHELL ?? "/bin/sh";
+    const shell = loginShell();
     let onPath: string | null = null;
     try {
       const printed = execFileSync(shell, ["-lc", `command -v ${name}`], {
